@@ -1,0 +1,393 @@
+# -*- coding: utf-8 -*-
+"""
+Atividade LNPG - Tipos de Dados Abstratos (TADs)
+Autor: Estudante de Sistemas de Informação
+Linguagem: Python
+"""
+
+# ==============================================================================
+# TAREFA 4: SUBPROGRAMAS DE VALIDAÇÃO (Reutilizáveis e Auxiliares)
+# ==============================================================================
+
+def limpar_apenas_numeros(texto):
+    """
+    Subprograma auxiliar que remove qualquer caractere que não seja número.
+    Útil para tratar CPFs com pontos/hífen e telefones com parênteses/espaços.
+    """
+    if not texto:
+        return ""
+    # Retorna apenas os caracteres que são dígitos (0-9)
+    return "".join(caractere for caractere in str(texto) if caractere.isdigit())
+
+
+def validar_nome_cliente(nome):
+    """
+    Regra de Negócio do Cliente: Nome não pode ser nulo/vazio e deve ter >= 5 caracteres.
+    """
+    if nome is None:
+        return False
+    # strip() remove espaços em branco inúteis no começo e no fim
+    if len(nome.strip()) < 5:
+        return False
+    return True
+
+
+def validar_cpf(cpf):
+    """
+    Regra de Negócio do Cliente: CPF não nulo e deve conter exatamente 11 dígitos numéricos.
+    """
+    if cpf is None:
+        return False
+    cpf_limpo = limpar_apenas_numeros(cpf)
+    return len(cpf_limpo) == 11
+
+
+def validar_telefone(telefone):
+    """
+    Regra de Negócio do Cliente: Opcional. Se informado, de 10 a 11 dígitos numéricos.
+    """
+    # Se for vazio, nulo ou string vazia, é válido pois é opcional
+    if telefone is None or str(telefone).strip() == "":
+        return True
+    tel_limpo = limpar_apenas_numeros(telefone)
+    return len(tel_limpo) in [10, 11]
+
+
+def validar_email(email):
+    """
+    Regra de Negócio do Cliente: Opcional. Se informado, deve conter '@'.
+    """
+    if email is None or str(email).strip() == "":
+        return True
+    return "@" in str(email)
+
+
+# ==============================================================================
+# TAREFA 1: IMPLEMENTAÇÃO DO TAD CLIENTE
+# ==============================================================================
+
+class Cliente:
+    """
+    Representa o Tipo Abstrato de Dados (TAD) Cliente.
+    Utiliza encapsulamento para garantir que dados inválidos não sejam armazenados.
+    """
+    
+    def __init__(self, nome, cpf, telefone=None, email=None):
+        """
+        Operações: Construtores (Em Python, usamos parâmetros opcionais/padrão para simular a sobrecarga).
+        Suporta tanto Cliente(nome, cpf) quanto Cliente(nome, cpf, telefone, email).
+        """
+        # Inicializa os atributos privados (com __) como None por padrão
+        self.__nome = None
+        self.__cpf = None
+        self.__telefone = None
+        self.__email = None
+        
+        # Aplicação das Regras de Negócio na inicialização usando os subprogramas
+        if validar_nome_cliente(nome):
+            self.__nome = nome.strip()
+        else:
+            print(f"[ERRO] Nome '{nome}' inválido! O cliente não será armazenado corretamente.")
+            
+        if validar_cpf(cpf):
+            self.__cpf = limpar_apenas_numeros(cpf)
+        else:
+            print(f"[ERRO] CPF '{cpf}' inválido! O cliente não será armazenado corretamente.")
+            
+        if validar_telefone(telefone):
+            self.__telefone = limpar_apenas_numeros(telefone) if telefone else None
+        else:
+            print(f"[ERRO] Telefone '{telefone}' inválido! Não foi armazenado.")
+            
+        if validar_email(email):
+            self.__email = email
+        else:
+            print(f"[ERRO] E-mail '{email}' inválido! Não foi armazenado.")
+
+    # Métodos de Acesso (Getters) para garantir o encapsulamento
+    def getNome(self):
+        """Retorna o nome do cliente."""
+        return self.__nome
+
+    def getCpf(self):
+        """Retorna o CPF do cliente."""
+        return self.__cpf
+
+    def getTelefone(self):
+        """Retorna o telefone do cliente."""
+        return self.__telefone
+
+    def getEmail(self):
+        """Retorna o e-mail do cliente."""
+        return self.__email
+
+    # Métodos de Modificação (Setters/Operações de alteração) com validação
+    def alterarTelefone(self, telefone):
+        """Atualiza o telefone do cliente caso seja válido."""
+        if validar_telefone(telefone):
+            self.__telefone = limpar_apenas_numeros(telefone) if telefone else None
+            return True
+        print(f"[ERRO] Falha ao alterar: Telefone '{telefone}' inválido.")
+        return False
+
+    def alterarEmail(self, email):
+        """Atualiza o e-mail do cliente caso seja válido."""
+        if validar_email(email):
+            self.__email = email
+            return True
+        print(f"[ERRO] Falha ao alterar: E-mail '{email}' inválido.")
+        return False
+
+
+# ==============================================================================
+# TAREFA 2: IMPLEMENTAÇÃO DO TAD BANCO
+# ==============================================================================
+
+class Banco:
+    """
+    Representa o Tipo Abstrato de Dados (TAD) Banco.
+    Gerencia uma coleção de contas bancárias (Relacionamento de Agregação).
+    """
+    
+    def __init__(self, nome, codigo):
+        """Operação: Cria um banco sem contas cadastradas."""
+        self.__nome = None
+        self.__codigo = None
+        # Coleção de contas inicializada como uma lista vazia
+        self.__contas = []
+        
+        # Validação do Nome do Banco (Mínimo 3 caracteres)
+        if nome is not None and len(nome.strip()) >= 3:
+            self.__nome = nome.strip()
+        else:
+            print("[ERRO] Nome do banco inválido (mínimo 3 caracteres).")
+            
+        # Validação do Código do Banco (Maior que zero)
+        if codigo > 0:
+            self.__codigo = codigo
+        else:
+            print("[ERRO] Código do banco deve ser maior que zero.")
+
+    # Métodos de Acesso (Getters)
+    def getNome(self):
+        return self.__nome
+
+    def getCodigo(self):
+        return self.__codigo
+
+    # Operações de Gerenciamento de Contas
+    def buscarConta(self, numero):
+        """
+        Localiza uma conta pelo número.
+        Retorna o objeto ContaBancaria se achar, ou None se não encontrar.
+        """
+        for conta in self.__contas:
+            if conta.getNumero() == numero:
+                return conta
+        return None
+
+    def adicionarConta(self, conta):
+        """
+        Adiciona uma conta ao banco respeitando as regras:
+        - Não podem existir duas contas com o mesmo número no mesmo banco.
+        - Uma conta só pode pertencer a um banco por vez.
+        """
+        if conta is None:
+            return False
+            
+        # Verifica se já existe conta com esse número no banco
+        if self.buscarConta(conta.getNumero()) is not None:
+            print(f"[ERRO] Já existe a conta {conta.getNumero()} neste banco.")
+            return False
+            
+        # Verifica se a conta está associada a este banco especificamente
+        if conta.getBanco() != self:
+            print(f"[ERRO] A conta {conta.getNumero()} não está associada a este banco institucionalmente.")
+            return False
+            
+        # Adiciona na lista/coleção privada
+        self.__contas.append(conta)
+        return True
+
+    def removerConta(self, numero):
+        """Remove uma conta do banco através do número."""
+        conta = self.buscarConta(numero)
+        if conta is not None:
+            self.__contas.remove(conta)
+            return True
+        print(f"[ERRO] Conta {numero} não encontrada para remoção.")
+        return False
+
+    def quantidadeContas(self):
+        """Retorna a quantidade de contas cadastradas."""
+        return len(self.__contas)
+
+    def listarContas(self):
+        """Retorna todas as contas cadastradas (a coleção)."""
+        return self.__contas
+
+
+# ==============================================================================
+# TAREFA 3: IMPLEMENTAÇÃO DO TAD CONTABANCARIA
+# ==============================================================================
+
+class ContaBancaria:
+    """
+    Representa o Tipo Abstrato de Dados (TAD) ContaBancaria.
+    Demonstra COMPOSIÇÃO/AGREGAÇÃO ao exigir um Cliente (titular) e um Banco.
+    """
+    
+    def __init__(self, numero, titular, banco, saldoInicial):
+        """Operação: Cria uma nova conta bancária."""
+        # Validação do Número da Conta (Maior que zero)
+        if numero > 0:
+            self.__numero = numero
+        else:
+            raise ValueError("O número da conta deve ser maior que zero.")
+            
+        # Validação do Titular (Não pode ser nulo e deve ser um Cliente válido)
+        if titular is not None and isinstance(titular, Cliente) and titular.getNome() is not None:
+            self.__titular = titular
+        else:
+            raise ValueError("Toda conta deve possuir exatamente um titular válido associado.")
+            
+        # Validação do Banco (Não pode ser nulo e deve ser uma instância de Banco)
+        if banco is not None and isinstance(banco, Banco) and banco.getNome() is not None:
+            self.__banco = banco
+        else:
+            raise ValueError("Toda conta deve estar associada a exatamente um banco válido.")
+            
+        # Regra do Saldo Inicial: Se negativo, inicia com zero
+        if saldoInicial >= 0:
+            self.__saldo = float(saldoInicial)
+        else:
+            self.__saldo = 0.0
+
+    # Métodos de Acesso (Getters)
+    def getNumero(self):
+        return self.__numero
+
+    def getTitular(self):
+        return self.__titular
+
+    def getBanco(self):
+        return self.__banco
+
+    def consultarSaldo(self):
+        """Consulta de saldo: não modifica nenhuma informação da conta."""
+        return self.__saldo
+
+    # Regras de Negócio e Operações Financeiras
+    def depositar(self, valor):
+        """Somente valores positivos podem ser adicionados ao saldo."""
+        if valor > 0:
+            self.__saldo += valor
+            print(f"[DEPÓSITO] R$ {valor:.2f} depositados na conta {self.__numero}.")
+        else:
+            print(f"[ERRO DE DEPÓSITO] Valor R$ {valor:.2f} inválido para depósito na conta {self.__numero}.")
+
+    def sacar(self, valor):
+        """
+        Somente valores positivos podem ser retirados.
+        Um saque só é realizado se existir saldo suficiente.
+        """
+        if valor <= 0:
+            print(f"[ERRO DE SAQUE] Valor R$ {valor:.2f} inválido para saque na conta {self.__numero}.")
+            return False
+            
+        if self.__saldo >= valor:
+            self.__saldo -= valor
+            print(f"[SAQUE] R$ {valor:.2f} retirados da conta {self.__numero}.")
+            return True
+        else:
+            print(f"[ERRO DE SAQUE] Saldo insuficiente na conta {self.__numero} para sacar R$ {valor:.2f}.")
+            return False
+
+    def estaAtiva(self):
+        """Uma conta é ativa quando seu saldo é estritamente maior que zero."""
+        return self.__saldo > 0
+
+
+# ==============================================================================
+# TAREFA 5: PROGRAMA DE DEMONSTRAÇÃO (Cenário de Teste)
+# ==============================================================================
+
+if __name__ == "__main__":
+    print("--- INICIANDO SISTEMA BANCÁRIO (DEMONSTRAÇÃO LNPG) ---
+")
+    
+    # 1. Criar um banco
+    meu_banco = Banco("Banco do Brasil S.A.", 1)
+    
+    # 2. Criar três clientes
+    cliente1 = Cliente("Carlos Augusto", "123.456.789-00", "(82) 99999-1111", "carlos@email.com")
+    cliente2 = Cliente("Mariana Silva", "98765432111", "82988882222", "mariana@email.com")
+    cliente3 = Cliente("Roberto Alencar", "111.222.333-44") # Telefone e e-mail omissos (opcionais)
+    
+    # Teste de Validação de Cliente (Nome curto e CPF errado - Não devem ser aceitos de forma íntegra)
+    cliente_invalido = Cliente("Ana", "123", "123", "email_sem_at.com")
+    
+    print("
+--- Criando e Registrando as Contas Bancárias ---")
+    # 3, 4 e 5. Criar pelo menos quatro contas bancárias, associando ao cliente e ao banco
+    # Conta 1: Saldo inicial positivo
+    conta1 = ContaBancaria(1001, cliente1, meu_banco, 500.0)
+    # Conta 2: Saldo inicial positivo
+    conta2 = ContaBancaria(1002, cliente2, meu_banco, 1500.0)
+    # Conta 3: Saldo inicial negativo para testar regra de negócio (deve ir para 0.0)
+    conta3 = ContaBancaria(1003, cliente3, meu_banco, -150.0)
+    # Conta 4: Outra conta para o cliente 1 (Um cliente pode possuir várias contas)
+    conta4 = ContaBancaria(1004, cliente1, meu_banco, 50.0)
+    
+    # 6. Registrar as contas no banco
+    meu_banco.adicionarConta(conta1)
+    meu_banco.adicionarConta(conta2)
+    meu_banco.adicionarConta(conta3)
+    meu_banco.adicionarConta(conta4)
+    
+    # Tentativa de injetar uma conta duplicada com o mesmo número (Regra de negócio impedirá)
+    conta_duplicada = ContaBancaria(1001, cliente2, meu_banco, 200.0)
+    meu_banco.adicionarConta(conta_duplicada)
+    
+    print("
+--- Movimentações Financeiras (Depósitos e Saques) ---")
+    # 7. Realizar depósitos
+    conta1.depositar(250.0)
+    conta3.depositar(100.0) # Estava zerada pelo saldo inicial negativo, agora terá 100
+    conta4.depositar(-20.0) # Valor inválido, deve ser rejeitado
+    
+    # 8. Realizar saques
+    conta2.sacar(500.0)   # Sucesso, saldo era 1500 -> vai para 1000
+    conta1.sacar(1000.0)  # Deve falhar por saldo insuficiente (saldo é 750)
+    conta3.sacar(-50.0)   # Valor inválido, deve ser rejeitado
+    
+    # ==============================================================================
+    # TAREFA 6: RELATÓRIO DE EXECUÇÃO
+    # ==============================================================================
+    print("
+==================================================")
+    print("              RELATÓRIO DE EXECUÇÃO               ")
+    print("==================================================")
+    print(f"Nome do Banco   : {meu_banco.getNome()}")
+    print(f"Código do Banco : {meu_banco.getCodigo()}")
+    print(f"Qtd de Contas   : {meu_banco.quantidadeContas()}")
+    print("--------------------------------------------------")
+    print("LISTAGEM DETALHADA DAS CONTAS:")
+    
+    saldo_total_banco = 0.0
+    
+    for conta in meu_banco.listarContas():
+        titular = conta.getTitular()
+        saldo_atual = conta.consultarSaldo()
+        saldo_total_banco += saldo_atual
+        
+        status_ativa = "Sim" if conta.estaAtiva() else "Não"
+        
+        print(f"Nº Conta: {conta.getNumero()} | Ativa: {status_ativa}")
+        print(f"  Titular  : {titular.getNome()} (CPF: {titular.getCpf()})")
+        print(f"  Contato  : Tel: {titular.getTelefone()} | Email: {titular.getEmail()}")
+        print(f"  Saldo    : R$ {saldo_atual:.2f}")
+        print("-" * 50)
+        
+    print(f"SALDO TOTAL ARMAZENADO PELO BANCO: R$ {saldo_total_banco:.2f}")
+    print("==================================================")
