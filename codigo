@@ -391,3 +391,89 @@ if __name__ == "__main__":
         
     print(f"SALDO TOTAL ARMAZENADO PELO BANCO: R$ {saldo_total_banco:.2f}")
     print("==================================================")
+
+modificado
+
+# Tarefa 4
+
+def limpar_apenas_numeros(texto):
+    """
+    Um subprograma auxiliar pra remover os caracteres que não são números, feito
+    pra tratar cpfs com pontos e hífens e telefones com parênteses e espaços 
+    """
+    if not texto:
+        return ""
+    # Vai retornar apenas os caracteres que são dígitos (0-9)
+    return "".join(caractere for caractere in str(texto) if caractere.isdigit())
+
+def validar_nome_cliente(nome):
+    """
+    Regra de Negócio do Cliente: Nome não pode ser nulo/vazio e deve ter >= 5 caracteres.
+    """
+    if nome is None:
+        return False
+    # strip() para remover espaços em branco inúteis no começo e no fim
+    if len(nome.strip()) < 5:
+        return False
+    return True
+
+
+def validar_cpf(cpf):
+    """
+    Regra de Negócio do Cliente: CPF não nulo e deve conter exatamente 11 dígitos numéricos.
+    """
+    if cpf is None:
+        return False
+    cpf_limpo = limpar_apenas_numeros(cpf)
+    return len(cpf_limpo) == 11
+
+
+def validar_telefone(telefone):
+    """
+    Regra de Negócio do Cliente: É opcional. Se informado, de 10 a 11 dígitos numéricos.
+    """
+    # Se for vazio, nulo ou string vazia, é válido pois é opcional
+    if telefone is None or str(telefone).strip() == "":
+        return True
+    tel_limpo = limpar_apenas_numeros(telefone)
+    return len(tel_limpo) in [10, 11]
+
+
+def validar_email(email):
+    """
+    Regra de Negócio do Cliente: É opcional. Se informado, deve conter '@'.
+    """
+    if email is None or str(email).strip() == "":
+        return True
+    return "@" in str(email)
+
+# Tarefa 1
+
+class Cliente:
+
+    def __init__(self, nome, cpf, telefone=None, email=None):
+
+        self.__nome = None
+        self.__cpf = None
+        self.__telefone = None
+        self.__email = None 
+
+        if validar_nome_cliente(nome):
+            self.__nome = nome.strip()
+        else:
+            print(f"[ERRO] Nome '{nome}' inválido! O cliente não será armazenado corretamente.")
+            
+        if validar_cpf(cpf):
+            self.__cpf = limpar_apenas_numeros(cpf)
+        else:
+            print(f"[ERRO] CPF '{cpf}' inválido! O cliente não será armazenado corretamente.")
+            
+        if validar_telefone(telefone):
+            self.__telefone = limpar_apenas_numeros(telefone) if telefone else None
+        else:
+            print(f"[ERRO] Telefone '{telefone}' inválido! Não foi armazenado.")
+            
+        if validar_email(email):
+            self.__email = email
+        else:
+            print(f"[ERRO] E-mail '{email}' inválido! Não foi armazenado.")
